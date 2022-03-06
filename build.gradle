@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+}
+
+group 'jvm.mem.mgmnt'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    // configuration that holds others jars to be included in the final artifact jar
+    extraLibs
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'garbage.collection.Main'
+        attributes 'Implementation-Title': project.name
+        attributes 'Implementation-Version': project.version
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+
+dependencies {
+    //added for extra lib configuration
+    configurations.compileOnly.extendsFrom(configurations.extraLibs)
+
+    compileOnly group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.7'
+    compileOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.21'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+

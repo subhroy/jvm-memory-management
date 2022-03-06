@@ -1,0 +1,61 @@
+Git URL:  https://gitlab.pasteur.fr/bia/wellPlateReader/blob/1d44f034d542b82f0434b1365f018dee0bff3ca9/WellPlateReader/build.gradle
+
+/* Reference code */
+apply plugin: 'java-library'
+apply plugin: 'eclipse'
+
+version = '2.2.3.1'
+
+println "ICY_HOME=${System.env.ICY_HOME}"
+println project.name + " " + version
+
+configurations {
+	extraLibs // configuration that holds jars to include in the jar
+	implementation.extendsFrom(extraLibs)
+}
+
+repositories {
+	jcenter()
+}
+
+dependencies {
+	// 1. External libraries
+	// 2. Icy libraries
+	implementation files("${System.env.ICY_HOME}/lib/bioformats.jar") // Bioformats
+	implementation files("${System.env.ICY_HOME}/lib/flamingo.jar") // Flamingo
+	implementation files("${System.env.ICY_HOME}/lib/jai_core.jar") // JAI
+	implementation files("${System.env.ICY_HOME}/lib/jai_codec.jar") // JAI
+
+	implementation files("${System.env.ICY_HOME}/icy.jar") // Icy core
+	implementation files("${System.env.ICY_HOME}/plugins/adufour/ezplug/EzPlug.jar") // EzPlug
+	implementation files("${System.env.ICY_HOME}/plugins/adufour/protocols/Protocols.jar") // Protocols
+	implementation files("${System.env.ICY_HOME}/plugins/adufour/blocks/Blocks.jar") // Blocks
+
+	// 3. Test libraries
+	testImplementation 'org.hamcrest:hamcrest-all:1.3'
+	testImplementation 'junit:junit:4.12'
+}
+
+// Eclipse project creation
+eclipse {
+	classpath.downloadJavadoc = true
+	project.natures += ['icy.icy4eclipse.core.icynature']
+}
+
+// Jar task to include external libraries
+jar {
+	from configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+// Jar task to include external libraries and source files in the same zip file
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.output
+	from sourceSets.main.java
+	from configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+// Artifacts created when build
+artifacts {
+	archives sourcesJar
+}
